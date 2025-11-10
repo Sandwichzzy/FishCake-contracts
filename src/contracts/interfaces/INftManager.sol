@@ -1,8 +1,39 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 interface INftManager {
+    error WithdrawNativeTokenFail(address to, uint256 amount);
     error MineAmountNotEnough(uint256 amount);
+
+    event UriPrefixSet(address indexed setterAddress, string urlPrefix);
+
+    event SetValues(address indexed _setterAddress, uint256 _merchantValue, uint256 _userValue);
+
+    event CreateNFT(
+        address indexed creator,
+        uint256 _tokenId,
+        string _businessName,
+        string _description,
+        string _imgUrl,
+        string _businessAddress,
+        string _webSite,
+        string _social,
+        uint256 _value,
+        uint256 _deadline,
+        uint8 _type
+    );
+
+    event WithdrawUToken(
+        address indexed withdrawer, address indexed _tokenAddr, address indexed _account, uint256 _value
+    );
+
+    event SetValidTime(address indexed setter, uint256 _time);
+
+    event Withdraw(address indexed withdrawer, uint256 _amount);
+    event Received(address indexed receiver, uint256 _value);
+
+    event UpdatedNftJson(address indexed creator, uint8 nftType, string newJsonUrl);
+    event NameSymbolUpdated(string newName, string newSymbol);
 
     function createNft(
         string memory _businessName,

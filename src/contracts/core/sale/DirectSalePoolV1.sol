@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -72,7 +72,7 @@ contract DirectSalePoolV1 is
         emit BuyFishcakeCoin(msg.sender, payUsdtAmount, fccAmount);
     }
 
-    function buyFccByUsdtAmount(uint256 tokenUsdtAmount) external {
+    function buyFccByUsdAmount(uint256 tokenUsdtAmount) external {
         require(
             s_tokenUsdtAddress.balanceOf(msg.sender) >= tokenUsdtAmount,
             "DirectSalePool buyFccAmount: usdt token is not enough"

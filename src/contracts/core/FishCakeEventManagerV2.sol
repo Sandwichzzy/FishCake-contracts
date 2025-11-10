@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -25,8 +25,8 @@ contract FishCakeEventManagerV2 is
     uint256 public constant TOTAL_MINE_AMT = 300_000_000 * 10 ** 6; // Total mining quantity
     uint256 public constant MAX_DEADLINE = 2592000; // 30 days = 2592000 s
     uint256 public constant ONEDAY = 86400; // one day 86400 s
-    uint256 public constant MERCHANT_ONCEMAX_MINE_AMT = 240 * 10 ** 6; // pro nft once max mining quantity
-    uint256 public constant USER_ONCEMAX_MINE_AMT = 24 * 10 ** 6; // basic nft once max mining quantity
+    // uint256 public constant MERCHANT_ONCEMAX_MINE_AMT = 240 * 10 ** 6; // pro nft once max mining quantity
+    // uint256 public constant USER_ONCEMAX_MINE_AMT = 24 * 10 ** 6; // basic nft once max mining quantity
 
     uint256 public s_minedAmt; // Mined quantity
     uint8 public s_minePercent; // Mining percentage
@@ -168,6 +168,7 @@ contract FishCakeEventManagerV2 is
         });
         s_activityInfoArrs.push(ai);
         s_activityInfoExtArrs.push(aie);
+
         emit ActivityAdd(
             _msgSender(),
             ai.activityId,
