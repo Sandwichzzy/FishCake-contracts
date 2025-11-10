@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "../../interfaces/IDirectSalePool.sol";
 import "../../interfaces/IRedemptionPool.sol";
 
-contract DirectSalePoolV1 is
+contract DirectSalePool is
     IDirectSalePool,
     Initializable,
     ERC20Upgradeable,

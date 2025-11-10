@@ -11,8 +11,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../interfaces/IFishCakeEventManager.sol";
 import "../interfaces/INftManager.sol";
 
-/// @custom:oz-upgrades-from FishcakeEventManagerV1
-contract FishCakeEventManagerV2 is
+contract FishCakeEventManager is
     Initializable,
     IFishCakeEventManager,
     ERC20Upgradeable,
