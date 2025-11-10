@@ -12,6 +12,7 @@ import "../../interfaces/IDirectSalePool.sol";
 import "../../interfaces/IRedemptionPool.sol";
 
 contract DirectSalePoolV1 is
+    IDirectSalePool,
     Initializable,
     ERC20Upgradeable,
     ERC20BurnableUpgradeable,
@@ -27,10 +28,7 @@ contract DirectSalePoolV1 is
     uint256 public s_totalSellFccAmount;
     uint256 public s_totalReceiveUsdtAmount;
 
-    error TokenUsdtBalanceNotEnough();
-    error FishcakeTokenNotEnough();
-
-    event BuyFishcakeCoin(address indexed buyer, uint256 payUsdtAmount, uint256 fccAmount);
+    uint256[100] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {

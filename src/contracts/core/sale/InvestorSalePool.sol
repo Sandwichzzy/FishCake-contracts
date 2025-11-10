@@ -35,16 +35,6 @@ contract InvestorSalePool is
 
     uint256[100] private __gap;
 
-    error NotSupportFccAmount();
-    error NotSupportUsdtAmount();
-
-    error TokenUsdtAmountNotEnough();
-    error FccTokenAmountNotEnough();
-
-    event SetVaultAddress(address _vaultAddress);
-    event WithdrawUsdt(address indexed withdrawAddress, uint256 _amount);
-    event BuyFishcakeCoin(address indexed buyer, uint256 USDTAmount, uint256 fishcakeCoinAmount);
-
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
