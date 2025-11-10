@@ -15,11 +15,11 @@ contract FishCakeCoin is
     OwnableUpgradeable,
     ReentrancyGuard
 {
-    uint256 public constant TOTAL_SUPPLY = 1_000_000_000 * (10 ** 6);
+    uint256 public constant MAXTOTAL_SUPPLY = 1_000_000_000 * (10 ** 6);
 
     uint256 public s_burnedTokens;
 
-    address public s_redemptionPool;
+    address public s_RedemptionPool;
 
     bool internal s_isAllocation;
 
@@ -47,14 +47,63 @@ contract FishCakeCoin is
         _disableInitializers();
     }
 
-    function initialize(address _owner, address _RedemptionPool) public initializer {
-        __ERC20_init(NAME, SYMBOL);
-        __ERC20Burnable_init();
-        __Ownable_init();
-        _mint(address(this), TOTAL_SUPPLY);
+    modifier onlyRedemptionPool() {
+        require(
+            msg.sender == s_RedemptionPool,
+            "FishCakeCoin onlyRedemptionPool: Only RedemptionPool can call this function"
+        );
+        _;
     }
 
+    function initialize(address _owner, address _RedemptionPool) public initializer {
+        require(_owner != address(0), "FishCakeCoin initialize _owner can't be zero address");
+        __ERC20_init(NAME, SYMBOL);
+        __ERC20Burnable_init();
+        __Ownable_init(_owner);
+        s_RedemptionPool = _RedemptionPool;
+        _transferOwnership(_owner);
+        s_isAllocation = false;
+    }
+
+    function decimals() public view virtual override returns (uint8) {
+        return 6;
+    }
+
+    function FccBalance(address _address) external view returns (uint256) {
+        return balanceOf(_address);
+    }
+
+    function setRedemptionPool(address _RedemptionPool) external onlyOwner {
+        s_RedemptionPool = _RedemptionPool;
+    }
+
+    function setPoolAddress(fishCakePool memory _pool) external onlyOwner {
+        _beforeAllocation();
+        _beforePoolAddress(_pool);
+        s_fcPool = _pool;
+    }
+
+    function poolAllocate() external onlyOwner {
+        _beforeAllocation();
+        _mint(s_fcPool.miningPool, (MAXTOTAL_SUPPLY * 3) / 10); // 30% of total supply
+        _mint(s_fcPool.directSalePool, (MAXTOTAL_SUPPLY * 2) / 10); // 20% of total supply
+        _mint(s_fcPool.investorSalePool, MAXTOTAL_SUPPLY / 10); // 10% of total supply
+        _mint(s_fcPool.nftSalesRewardsPool, (MAXTOTAL_SUPPLY * 2) / 10); // 20% of total supply
+        _mint(s_fcPool.ecosystemPool, MAXTOTAL_SUPPLY / 10); // 10% of total supply
+        _mint(s_fcPool.foundationPool, MAXTOTAL_SUPPLY / 10); // 10% of total supply
+    }
+
+    function burn(address user, uint256 _amount) external onlyRedemptionPool {
+        _burn(user, _amount);
+        s_burnedTokens += _amount;
+        emit Burn(_amount, totalSupply());
+    }
+
+    function FccTotalSupply() external view returns (uint256) {
+        return totalSupply();
+    }
     // ==================== internal function =============================
+
     function _beforeAllocation() internal virtual {
         require(!s_isAllocation, "FishCakeCoin _beforeAllocation:Fishcake is already allocate");
     }
