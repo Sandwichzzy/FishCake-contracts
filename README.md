@@ -1,6 +1,7 @@
 # FishCake Contracts
 
-FishCake 是一个创新的 Web3 项目,通过 NFT、质押和活动空投机制,将线下商家活动与区块链经济相结合。
+FishCake 是一个创新的 Web3 项目,通过 NFT、质押和活动空投机制,将线下商家活动与区块链经济相结合,平台消除了中间商。
+例如一个社区来帮助项目方做活动，项目方需要把资金打给社区，社区再通过黑客松活动奖励，或者其他活动方式将分给用户，在这个例子里面，社区就是中间商，我们需要消除中间商，项目可以直接将要做活动代币打入合约，代币不再经过社区团队手。
 
 ## 项目概述
 
@@ -20,19 +21,19 @@ FishCake 生态系统包含以下核心功能:
 
 总发行量 **10 亿 FCC**,分配如下:
 
-1. **销售部分 (70%)**:
+1. **销售部分 (10%)**:
 
-   - **DirectSaleManager (20%)**: 直接销售,100% USDT 进入赎回池
+   - **DirectSaleManager (20%)**: 直接销售,100% USDT 进入赎回池 （取消该部分，这里的百分之 20 给到 Staking 和 Foundation）
    - **InvestorSaleManager (10%)**: 投资者销售,50% USDT 进入赎回池,50% 留在合约
 
-2. **NFT Manager (20%)**: 用户购买 NFT 时获得 FCC 返还
+2. **NFT Manager (20%)**: 用户购买 NFT 时获得 FCC 返还, 销售获得的 USDT 75% 进入赎回池
 
    - Basic NFT: 返还 100 FCC
    - Pro NFT: 返还 1,000 FCC
 
 3. **EventManager (30%)**: 活动空投挖矿池,商家发起活动可获得挖矿奖励
 
-4. **Foundation (20%)**: 基金会份额,10% 直接释放
+4. **Foundation (20%)**: 基金会份额
 
 5. **Ecosystem (10%)**: 生态系统份额
 
@@ -58,21 +59,6 @@ FishCake 生态系统包含以下核心功能:
 用户 ─► Staking ──────────────┘
       └► 质押挖矿 + Booster NFT
 ```
-
-## 开发工具链
-
-本项目使用 **Foundry** 作为智能合约开发框架。
-
-Foundry 包含以下工具:
-
-- **Forge**: 以太坊测试框架
-- **Cast**: 智能合约交互的瑞士军刀
-- **Anvil**: 本地以太坊节点
-- **Chisel**: Solidity REPL
-
-### 文档
-
-https://book.getfoundry.sh/
 
 ## 核心合约说明
 
@@ -210,12 +196,3 @@ FishCake-contracts/
 ├── foundry.toml                            # Foundry 配置
 └── remappings.txt                          # Import 路径映射
 ```
-
-## 技术特性
-
-- ✅ 使用 OpenZeppelin 可升级合约模式
-- ✅ 完整的重入攻击防护 (ReentrancyGuard)
-- ✅ SafeERC20 安全代币转账
-- ✅ 基于时间锁的质押和赎回机制
-- ✅ 动态 APR 和挖矿奖励递减机制
-- ✅ NFT 会员系统和 Booster 加成系统
