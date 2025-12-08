@@ -197,9 +197,9 @@ contract NftManagerV5 is
             s_userNftDeadline[msg.sender] = nftDeadline;
             s_fccTokenAddr.transfer(msg.sender, BASIC_MINE_AMT);
         }
-
+        // 转移USDT到合约
         s_tokenUsdtAddr.transferFrom(msg.sender, address(this), payUsdtAmount);
-        //销售获得的75%USDT转到RedemptionPool合约中
+        // 销售获得的75%USDT转到RedemptionPool合约中
         s_tokenUsdtAddr.transfer(address(s_redemptionPoolAddress), (payUsdtAmount * 75) / 100);
         uint256 tokenId = _nextTokenId++;
         _safeMint(msg.sender, tokenId);

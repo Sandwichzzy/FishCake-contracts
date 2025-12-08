@@ -64,17 +64,18 @@ contract InvestorSalePool is
         uint256 tokenUsdtAmount = calculateUsdtByFcc(fccAmount);
         if (s_tokenUsdtAddress.balanceOf(msg.sender) < tokenUsdtAmount) {
             revert TokenUsdtAmountNotEnough();
-            s_totalSellFccAmount += fccAmount;
-            s_totalReceiveUsdtAmount += tokenUsdtAmount;
-
-            s_tokenUsdtAddress.transferFrom(msg.sender, address(this), tokenUsdtAmount / 2);
-            //销售获得的一半USDT转到RedemptionPool合约中
-            s_tokenUsdtAddress.transferFrom(msg.sender, address(s_redemptionPool), tokenUsdtAmount / 2);
-
-            s_fishCakeCoin.transfer(msg.sender, fccAmount);
-
-            emit BuyFishcakeCoin(msg.sender, tokenUsdtAmount, fccAmount);
         }
+
+        s_totalSellFccAmount += fccAmount;
+        s_totalReceiveUsdtAmount += tokenUsdtAmount;
+
+        s_tokenUsdtAddress.transferFrom(msg.sender, address(this), tokenUsdtAmount / 2);
+        //销售获得的一半USDT转到RedemptionPool合约中
+        s_tokenUsdtAddress.transferFrom(msg.sender, address(s_redemptionPool), tokenUsdtAmount / 2);
+
+        s_fishCakeCoin.transfer(msg.sender, fccAmount);
+
+        emit BuyFishcakeCoin(msg.sender, tokenUsdtAmount, fccAmount);
     }
 
     function buyFccByUsdtAmount(uint256 tokenUsdtAmount) external {

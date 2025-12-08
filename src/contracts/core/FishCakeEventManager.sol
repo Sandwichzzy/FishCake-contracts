@@ -11,6 +11,11 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../interfaces/IFishCakeEventManager.sol";
 import "../interfaces/INftManager.sol";
 
+/**
+ * @title FishCakeEventManager
+ * @notice Manages airdrop activities and mining rewards for the FishCake ecosystem
+ * @dev This contract allows merchants to create token distribution activities and earn mining rewards based on participation
+ */
 contract FishCakeEventManager is
     Initializable,
     IFishCakeEventManager,
@@ -21,63 +26,96 @@ contract FishCakeEventManager is
 {
     using SafeERC20 for IERC20;
 
-    uint256 public constant TOTAL_MINE_AMT = 300_000_000 * 10 ** 6; // Total mining quantity
-    uint256 public constant MAX_DEADLINE = 2592000; // 30 days = 2592000 s
-    uint256 public constant ONEDAY = 86400; // one day 86400 s
-    // uint256 public constant MERCHANT_ONCEMAX_MINE_AMT = 240 * 10 ** 6; // pro nft once max mining quantity
-    // uint256 public constant USER_ONCEMAX_MINE_AMT = 24 * 10 ** 6; // basic nft once max mining quantity
+    /// @notice Total amount of FCC tokens available for mining rewards (300 million)
+    uint256 public constant TOTAL_MINE_AMT = 300_000_000 * 10 ** 6;
 
-    uint256 public s_minedAmt; // Mined quantity
-    uint8 public s_minePercent; // Mining percentage
-    bool public s_isMint; // Whether to mint
+    /// @notice Maximum duration for activities (30 days in seconds)
+    uint256 public constant MAX_DEADLINE = 2592000;
 
+    /// @notice Duration of one day in seconds
+    uint256 public constant ONEDAY = 86400;
+
+    /// @notice Total amount of tokens that have been mined
+    uint256 public s_minedAmt;
+
+    /// @notice Current mining reward percentage (decreases as more tokens are mined)
+    uint8 public s_minePercent;
+
+    /// @notice Flag indicating whether mining is still active
+    bool public s_isMint;
+
+    /// @notice FCC token contract address
     IERC20 public s_FccTokenAddr;
+
+    /// @notice USDT token contract address
     IERC20 public s_UsdtTokenAddr;
+
+    /// @notice NFT Manager contract interface
     INftManager public s_iNFTManager;
 
+    /**
+     * @notice Stores basic information about an airdrop activity
+     * @dev All token amounts are in the token's smallest unit (considering decimals)
+     */
     struct ActivityInfo {
-        uint256 activityId; // Activity ID
-        address businessAccount; // Initiator's account（0x...）
-        string businessName; // Merchant name
-        string activityContent; // Activity content
-        string latitudeLongitude; // Latitude and longitude
-        uint256 activityCreateTime; // Activity creation time
-        uint256 activityDeadLine; // Activity end time
-        uint8 dropType; // Reward rules: 1 represents average acquisition, 2 represents random.
-        uint256 dropNumber; // Number of reward units
-        uint256 minDropAmt; // When dropType is 1, fill in 0; when it is 2, fill in the minimum quantity to be received for each unit.
-        uint256 maxDropAmt; // When dropType is 1, fill in the quantity of each reward; when it is 2, fill in the maximum quantity to be received for each unit. The total reward quantity is determined by multiplying this field by the number of reward units.
-        address tokenContractAddr; //Token Contract Address，For example, USDT contract address: 0x55d398326f99059fF775485246999027B3197955
+        uint256 activityId; // Unique identifier for the activity
+        address businessAccount; // Address of the merchant who created the activity
+        string businessName; // Display name of the merchant
+        string activityContent; // Description or title of the activity
+        string latitudeLongitude; // Geographic coordinates for the activity location
+        uint256 activityCreateTime; // Timestamp when activity was created
+        uint256 activityDeadLine; // Timestamp when activity expires
+        uint8 dropType; // Distribution type: 1 = equal distribution, 2 = random amount
+        uint256 dropNumber; // Total number of reward units available
+        uint256 minDropAmt; // Minimum amount per drop (0 for dropType 1, used for dropType 2)
+        uint256 maxDropAmt; // Maximum amount per drop (fixed amount for type 1, upper limit for type 2)
+        address tokenContractAddr; // Address of the token being distributed (FCC or USDT)
     }
 
+    /**
+     * @notice Stores extended information tracking activity progress and rewards
+     */
     struct ActivityInfoExt {
-        uint256 activityId; // Activity ID
-        uint256 alreadyDropAmts; // Total rewarded quantity
-        uint256 alreadyDropNumber; // Total number of rewarded units
-        uint256 businessMinedAmt; // Mining rewards obtained by the merchant
-        uint256 businessMinedWithdrawedAmt; // Mining rewards already withdrawn by the merchant
-        uint8 activityStatus; // Activity status: 1 indicates ongoing, 2 indicates ended
+        uint256 activityId; // Activity identifier (matches ActivityInfo.activityId)
+        uint256 alreadyDropAmts; // Total amount of tokens already distributed
+        uint256 alreadyDropNumber; // Number of drops already claimed
+        uint256 businessMinedAmt; // FCC mining rewards earned by the merchant
+        uint256 businessMinedWithdrawedAmt; // Mining rewards already withdrawn (currently unused)
+        uint8 activityStatus; // Current status: 1 = active, 2 = finished
     }
 
+    /**
+     * @notice Records individual token drop transactions
+     */
     struct DropInfo {
-        uint256 activityId; // Activity ID
-        address userAccount; // Initiator's account（0x...）
-        uint256 dropTime; // drop Time
-        uint256 dropAmt; // drop amount
+        uint256 activityId; // ID of the activity this drop belongs to
+        address userAccount; // Address of the user who received the drop
+        uint256 dropTime; // Timestamp when the drop occurred
+        uint256 dropAmt; // Amount of tokens dropped to the user
     }
 
-    uint256[] public s_activityInfoChangedIdx; // Translation: Indices of changed statuses
-    ActivityInfo[] public s_activityInfoArrs; // all
-    ActivityInfoExt[] public s_activityInfoExtArrs; // Translation: Array of all activities
+    /// @notice Array of activity indices that have been modified (for tracking status changes)
+    uint256[] public s_activityInfoChangedIdx;
 
-    DropInfo[] public s_dropInfoArrs; // drop InfoA rrs
+    /// @notice Array storing all activity basic information
+    ActivityInfo[] public s_activityInfoArrs;
 
-    mapping(address => uint256) public s_NTFLastMineTime; // nft last mining time
+    /// @notice Array storing all activity extended information
+    ActivityInfoExt[] public s_activityInfoExtArrs;
 
+    /// @notice Array storing all drop transaction records
+    DropInfo[] public s_dropInfoArrs;
+
+    /// @notice Tracks the last time each address earned mining rewards (for 24-hour cooldown)
+    mapping(address => uint256) public s_NTFLastMineTime;
+
+    /// @notice Tracks whether a user has already received a drop from a specific activity
     mapping(uint256 => mapping(address => bool)) public s_activityDroppedToAccount;
 
+    /// @notice Tracks total mining rewards earned by each address
     mapping(address => uint256) public s_minerMineAmount;
 
+    /// @notice Reserved storage gap for future upgrades (following OpenZeppelin upgradeable pattern)
     uint256[99] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -85,11 +123,23 @@ contract FishCakeEventManager is
         _disableInitializers();
     }
 
+    /**
+     * @notice Restricts function access to only the NFT Manager contract
+     * @dev Used to protect functions that should only be called by the NFT Manager
+     */
     modifier onlyNftManager() {
         require(msg.sender == address(s_iNFTManager), "MessageManager: only nft manager can do this operate");
         _;
     }
 
+    /**
+     * @notice Initializes the contract with necessary addresses
+     * @dev This function replaces the constructor for upgradeable contracts
+     * @param _initialOwner Address that will own the contract
+     * @param _fccAddress Address of the FCC token contract
+     * @param _usdtTokenAddr Address of the USDT token contract
+     * @param _NFTManagerAddr Address of the NFT Manager contract
+     */
     function initialize(address _initialOwner, address _fccAddress, address _usdtTokenAddr, address _NFTManagerAddr)
         public
         initializer
@@ -101,6 +151,22 @@ contract FishCakeEventManager is
         __FishcakeEventManagerStorage_init(_fccAddress, _usdtTokenAddr, _NFTManagerAddr);
     }
 
+    /**
+     * @notice Creates a new airdrop activity
+     * @dev Transfers tokens from caller to contract and creates activity records
+     * @param _businessName Name of the merchant creating the activity
+     * @param _activityContent Description or title of the activity
+     * @param _latitudeLongitude Geographic coordinates for the activity
+     * @param _activityDeadLine Expiration timestamp (must be within 30 days from now)
+     * @param _totalDropAmts Total amount of tokens to be distributed
+     * @param _dropType Distribution type: 1 = equal amounts, 2 = random amounts
+     * @param _dropNumber Number of drops available
+     * @param _minDropAmt Minimum amount per drop (0 for type 1)
+     * @param _maxDropAmt Maximum/fixed amount per drop
+     * @param _tokenContractAddr Address of token to distribute (must be FCC or USDT)
+     * @return success Boolean indicating if operation succeeded
+     * @return activityId The ID of the newly created activity
+     */
     function activityAdd(
         string memory _businessName,
         string memory _activityContent,
@@ -139,7 +205,7 @@ contract FishCakeEventManager is
             _minDropAmt = 0;
         }
 
-        // Transfer token to this contract for locking.
+        // Transfer tokens to this contract for locking
         IERC20(_tokenContractAddr).transferFrom(msg.sender, address(this), _totalDropAmts);
 
         ActivityInfo memory ai = ActivityInfo({
@@ -185,6 +251,19 @@ contract FishCakeEventManager is
         return (true, ai.activityId);
     }
 
+    /**
+     * @notice Finishes an activity and distributes mining rewards to the merchant
+     * @dev Returns undistributed tokens to merchant and calculates mining rewards based on participation
+     * @param _activityId The ID of the activity to finish
+     * @return success Boolean indicating if operation succeeded
+     *
+     * Mining reward calculation:
+     * - Only merchants with valid NFTs (Merchant or User) can earn rewards
+     * - Rewards can only be claimed once per 24 hours
+     * - Merchant NFT holders get full percentage, User NFT holders get 50%
+     * - Reward = min(lower_of(alreadyDropAmts, alreadyDropNumber * 20) * percent / 100, maxMineAmtLimit)
+     * - Mining percentage decreases as total mined amount increases (50% -> 40% -> 20% -> 10% -> 0%)
+     */
     function activityFinish(uint256 _activityId) public nonReentrant returns (bool) {
         require(
             _activityId > 0 && _activityId <= s_activityInfoArrs.length,
@@ -204,7 +283,7 @@ contract FishCakeEventManager is
             IERC20(ai.tokenContractAddr).transfer(msg.sender, returnAmount);
         }
 
-        // ifReward There is only one reward in 24 hours
+        // Check eligibility for mining rewards: must have valid NFT and respect 24-hour cooldown
         if (
             s_isMint && ifReward()
                 && (
@@ -212,7 +291,7 @@ contract FishCakeEventManager is
                         || s_iNFTManager.getUserNTFDeadline(_msgSender()) > block.timestamp
                 )
         ) {
-            // Get the current percentage of mined tokens
+            // Get current mining parameters based on total mined amount
             uint8 currentMinePercent;
             uint256 merchantOnceMaxMineTmpAmt;
             uint256 userOnceMaxMineTmpAmt;
@@ -221,20 +300,19 @@ contract FishCakeEventManager is
                 s_minePercent = currentMinePercent;
             }
             if (s_minePercent > 0 && address(s_FccTokenAddr) == ai.tokenContractAddr) {
+                // User NFT holders get 50% discount on mining percentage
                 uint8 percent = (
                     s_iNFTManager.getMerchantNTFDeadline(_msgSender()) > block.timestamp
                         ? s_minePercent
                         : s_minePercent / 2
-                ); //user 打5折
+                );
 
                 uint256 maxMineAmtLimit = (
                     s_iNFTManager.getMerchantNTFDeadline(_msgSender()) > block.timestamp
                         ? merchantOnceMaxMineTmpAmt
                         : userOnceMaxMineTmpAmt
                 );
-                // For each FCC release activity hosted on the platform,
-                // the activity initiator can mine tokens based on either 50% of the total token quantity consumed by the activity
-                // or 50% of the total number of participants multiplied by 20, whichever is lower.
+                // Mining reward is based on the lower of: total drops or (number of participants * 20 FCC)
                 uint256 tmpDroppedVal = aie.alreadyDropNumber * 20 * 1e6;
                 uint256 tmpBusinessMinedAmt =
                     ((aie.alreadyDropAmts > tmpDroppedVal ? tmpDroppedVal : aie.alreadyDropAmts) * percent) / 100;
@@ -249,6 +327,7 @@ contract FishCakeEventManager is
                         s_minerMineAmount[msg.sender] += tmpBusinessMinedAmt;
                         minedAmount = tmpBusinessMinedAmt;
                     } else {
+                        // Final mining reward - exhaust remaining supply
                         aie.businessMinedAmt = TOTAL_MINE_AMT - s_minedAmt;
                         s_minedAmt += aie.businessMinedAmt;
                         s_FccTokenAddr.transfer(msg.sender, aie.businessMinedAmt);
@@ -266,6 +345,14 @@ contract FishCakeEventManager is
         return true;
     }
 
+    /**
+     * @notice Distributes tokens to a user as part of an activity
+     * @dev Can only be called by the activity owner, each user can only receive one drop per activity
+     * @param _activityId The ID of the activity
+     * @param _userAccount The address of the user receiving the drop
+     * @param _dropAmt The amount to drop (must be within min/max range for type 2, ignored for type 1)
+     * @return success Boolean indicating if operation succeeded
+     */
     function drop(uint256 _activityId, address _userAccount, uint256 _dropAmt) external nonReentrant returns (bool) {
         require(
             s_activityDroppedToAccount[_activityId][_userAccount] == false,
@@ -305,15 +392,33 @@ contract FishCakeEventManager is
         return true;
     }
 
+    /**
+     * @notice Returns the total mining rewards earned by a specific address
+     * @param _miner The address to query
+     * @return Total amount of mining rewards accumulated
+     */
     function getMinerMineAmount(address _miner) external view returns (uint256) {
         return s_minerMineAmount[_miner];
     }
 
+    /**
+     * @notice Deletes the mining amount record for a miner
+     * @dev Can only be called by the NFT Manager contract
+     * @param _miner The address whose mining record should be deleted
+     */
     function deleteMinerMineAmount(address _miner) external onlyNftManager {
         delete s_minerMineAmount[_miner];
     }
 
-    // ======================= internal =======================
+    // ======================= INTERNAL FUNCTIONS =======================
+
+    /**
+     * @notice Initializes storage variables for the Event Manager
+     * @dev Internal function called during contract initialization
+     * @param _fccAddress Address of the FCC token contract
+     * @param _usdtTokenAddr Address of the USDT token contract
+     * @param _NFTManagerAddr Address of the NFT Manager contract
+     */
     function __FishcakeEventManagerStorage_init(address _fccAddress, address _usdtTokenAddr, address _NFTManagerAddr)
         internal
         initializer
@@ -327,6 +432,20 @@ contract FishCakeEventManager is
         s_isMint = true;
     }
 
+    /**
+     * @notice Calculates the current mining percentage and limits based on total mined amount
+     * @dev Mining rewards decrease in tiers as more tokens are mined
+     * @return currentMinePercent The mining percentage for the current tier
+     * @return merchantOnceMaxMineTmpAmt Maximum mining amount per activity for Merchant NFT holders
+     * @return userOnceMaxMineTmpAmt Maximum mining amount per activity for User NFT holders
+     *
+     * Tier structure:
+     * - 0-30M mined: 50% mining rate, 60 FCC max (merchant), 6 FCC max (user)
+     * - 30-100M mined: 40% mining rate, 30 FCC max (merchant), 3 FCC max (user)
+     * - 100-200M mined: 20% mining rate, 15 FCC max (merchant), 2 FCC max (user)
+     * - 200-300M mined: 10% mining rate, 8 FCC max (merchant), 1 FCC max (user)
+     * - 300M+ mined: Mining disabled
+     */
     function getCurrentMinePercent() internal view returns (uint8, uint256, uint256) {
         uint8 currentMinePercent = 0;
         uint256 merchantOnceMaxMineTmpAmt = 0;
@@ -355,6 +474,11 @@ contract FishCakeEventManager is
         return (currentMinePercent, merchantOnceMaxMineTmpAmt, userOnceMaxMineTmpAmt);
     }
 
+    /**
+     * @notice Checks if the caller is eligible for mining rewards based on the 24-hour cooldown
+     * @dev Returns true if caller has never mined or if 24 hours have passed since last mining
+     * @return _ret True if eligible for rewards, false otherwise
+     */
     function ifReward() internal view returns (bool _ret) {
         if (s_NTFLastMineTime[_msgSender()] == 0) {
             _ret = true;
