@@ -144,13 +144,15 @@ contract NftManagerV5 is
     //这个是一次性的NFT，质押完就失效
     function mintBoosterNFT(address miner) external onlyBooster nonReentrant returns (bool, uint256) {
         //根据miner的活动挖矿量来决定铸造哪种类型的Booster NFT
+        uint256 decimal = 1e6;
         uint256 mineAmount = s_feManagerAddress.getMinerMineAmount(miner);
-        if (mineAmount < 30) {
+        if (mineAmount < 30 * decimal) {
             revert MineAmountNotEnough(mineAmount);
         }
         uint256 boosterTokenId = _nextTokenId++;
-        _safeMint(msg.sender, boosterTokenId);
-        uint256 decimal = 10e6;
+        // Booster address call mintBoosterNFT(miner)
+        // not msg.sender cuz system records that the miner owns the NFT.
+        _safeMint(miner, boosterTokenId);
         if (mineAmount >= 30 * decimal && mineAmount < 90 * decimal) {
             s_nftMintType[boosterTokenId] = 3;
         } else if (mineAmount >= 90 * decimal && mineAmount < 300 * decimal) {

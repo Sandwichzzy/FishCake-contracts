@@ -17,7 +17,7 @@ contract FishCakeCoin is
 {
     uint256 public constant MAXTOTAL_SUPPLY = 1_000_000_000 * (10 ** 6);
 
-    uint256 public s_burnedTokens;
+    uint256 public s_redemptionPoolBurnedTokens; // Only tracks redemption pool burns
 
     address public s_RedemptionPool;
 
@@ -95,7 +95,7 @@ contract FishCakeCoin is
 
     function burn(address user, uint256 _amount) external onlyRedemptionPool {
         _burn(user, _amount);
-        s_burnedTokens += _amount;
+        s_redemptionPoolBurnedTokens += _amount;
         emit Burn(_amount, totalSupply());
     }
 

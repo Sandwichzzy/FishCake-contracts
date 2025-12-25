@@ -58,6 +58,7 @@ contract DirectSalePool is
             s_fishCakeCoin.balanceOf(address(this)) >= fccAmount, "DirectSalePool buyFccAmount: fcc token is not enough"
         );
         uint256 payUsdtAmount = fccAmount / 10;
+        require(payUsdtAmount > 0, "DirectSalePool buyFccAmount:payUsdtAmount is zero");
         if (s_tokenUsdtAddress.balanceOf(msg.sender) < payUsdtAmount) {
             revert TokenUsdtBalanceNotEnough();
         }
@@ -65,7 +66,7 @@ contract DirectSalePool is
         s_totalSellFccAmount += fccAmount;
         s_totalReceiveUsdtAmount += payUsdtAmount;
 
-        s_tokenUsdtAddress.transferFrom(msg.sender, address(s_redemptionPool), payUsdtAmount);
+        s_tokenUsdtAddress.safeTransferFrom(msg.sender, address(s_redemptionPool), payUsdtAmount);
 
         s_fishCakeCoin.transfer(msg.sender, fccAmount);
 
@@ -85,7 +86,7 @@ contract DirectSalePool is
         s_totalSellFccAmount += sellFccAmount;
         s_totalReceiveUsdtAmount += tokenUsdtAmount;
 
-        s_tokenUsdtAddress.transferFrom(msg.sender, address(s_redemptionPool), tokenUsdtAmount);
+        s_tokenUsdtAddress.safeTransferFrom(msg.sender, address(s_redemptionPool), tokenUsdtAmount);
         s_fishCakeCoin.transfer(msg.sender, sellFccAmount);
 
         emit BuyFishcakeCoin(msg.sender, tokenUsdtAmount, sellFccAmount);

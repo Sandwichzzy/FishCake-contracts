@@ -61,6 +61,10 @@ contract InvestorSalePool is
         if (fccAmount > s_fishCakeCoin.balanceOf(address(this))) {
             revert FccTokenAmountNotEnough();
         }
+        // EOA检查（根据需求选择,防止）
+        require(fccAmount > 0, "Amount must be greater than 0");
+        //不允许合约调用。避免聚合合约收集多个用户份额合并成一个大的交易
+        require(msg.sender == tx.origin && msg.sender.code.length == 0, "Contracts not allowed");
         uint256 tokenUsdtAmount = calculateUsdtByFcc(fccAmount);
         if (s_tokenUsdtAddress.balanceOf(msg.sender) < tokenUsdtAmount) {
             revert TokenUsdtAmountNotEnough();
@@ -69,9 +73,9 @@ contract InvestorSalePool is
         s_totalSellFccAmount += fccAmount;
         s_totalReceiveUsdtAmount += tokenUsdtAmount;
 
-        s_tokenUsdtAddress.transferFrom(msg.sender, address(this), tokenUsdtAmount / 2);
+        s_tokenUsdtAddress.safeTransferFrom(msg.sender, address(this), tokenUsdtAmount / 2);
         //销售获得的一半USDT转到RedemptionPool合约中
-        s_tokenUsdtAddress.transferFrom(msg.sender, address(s_redemptionPool), tokenUsdtAmount / 2);
+        s_tokenUsdtAddress.safeTransferFrom(msg.sender, address(s_redemptionPool), tokenUsdtAmount / 2);
 
         s_fishCakeCoin.transfer(msg.sender, fccAmount);
 
@@ -89,8 +93,8 @@ contract InvestorSalePool is
         s_totalSellFccAmount += fccAmount;
         s_totalReceiveUsdtAmount += tokenUsdtAmount;
 
-        s_tokenUsdtAddress.transferFrom(msg.sender, address(this), tokenUsdtAmount / 2);
-        s_tokenUsdtAddress.transferFrom(msg.sender, address(s_redemptionPool), tokenUsdtAmount / 2);
+        s_tokenUsdtAddress.safeTransferFrom(msg.sender, address(this), tokenUsdtAmount / 2);
+        s_tokenUsdtAddress.safeTransferFrom(msg.sender, address(s_redemptionPool), tokenUsdtAmount / 2);
 
         s_fishCakeCoin.transfer(msg.sender, fccAmount);
 

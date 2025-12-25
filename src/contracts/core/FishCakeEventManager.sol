@@ -194,7 +194,7 @@ contract FishCakeEventManager is
             _totalDropAmts >= 10e5, "FishcakeEventManager activityAdd: Total Drop Amounts Too Little , Minimum of 1."
         );
         require(
-            _dropNumber <= 101 || _dropNumber <= _totalDropAmts / 10e6,
+            _dropNumber < 101 || _dropNumber <= _totalDropAmts / 10e6,
             "FishcakeEventManager activityAdd: Drop Number Too Large ,Limit 100 or TotalDropAmts/10."
         );
         require(
@@ -286,10 +286,8 @@ contract FishCakeEventManager is
         // Check eligibility for mining rewards: must have valid NFT and respect 24-hour cooldown
         if (
             s_isMint && ifReward()
-                && (
-                    s_iNFTManager.getMerchantNTFDeadline(_msgSender()) > block.timestamp
-                        || s_iNFTManager.getUserNTFDeadline(_msgSender()) > block.timestamp
-                )
+                && (s_iNFTManager.getMerchantNTFDeadline(_msgSender()) > block.timestamp
+                    || s_iNFTManager.getUserNTFDeadline(_msgSender()) > block.timestamp)
         ) {
             // Get current mining parameters based on total mined amount
             uint8 currentMinePercent;
@@ -301,17 +299,15 @@ contract FishCakeEventManager is
             }
             if (s_minePercent > 0 && address(s_FccTokenAddr) == ai.tokenContractAddr) {
                 // User NFT holders get 50% discount on mining percentage
-                uint8 percent = (
-                    s_iNFTManager.getMerchantNTFDeadline(_msgSender()) > block.timestamp
+                uint8 percent =
+                    (s_iNFTManager.getMerchantNTFDeadline(_msgSender()) > block.timestamp
                         ? s_minePercent
-                        : s_minePercent / 2
-                );
+                        : s_minePercent / 2);
 
-                uint256 maxMineAmtLimit = (
-                    s_iNFTManager.getMerchantNTFDeadline(_msgSender()) > block.timestamp
+                uint256 maxMineAmtLimit =
+                    (s_iNFTManager.getMerchantNTFDeadline(_msgSender()) > block.timestamp
                         ? merchantOnceMaxMineTmpAmt
-                        : userOnceMaxMineTmpAmt
-                );
+                        : userOnceMaxMineTmpAmt);
                 // Mining reward is based on the lower of: total drops or (number of participants * 20 FCC)
                 uint256 tmpDroppedVal = aie.alreadyDropNumber * 20 * 1e6;
                 uint256 tmpBusinessMinedAmt =
@@ -382,8 +378,9 @@ contract FishCakeEventManager is
         IERC20(ai.tokenContractAddr).transfer(_userAccount, _dropAmt);
         s_activityDroppedToAccount[_activityId][_userAccount] = true;
 
-        DropInfo memory di =
-            DropInfo({activityId: _activityId, userAccount: _userAccount, dropTime: block.timestamp, dropAmt: _dropAmt});
+        DropInfo memory di = DropInfo({
+            activityId: _activityId, userAccount: _userAccount, dropTime: block.timestamp, dropAmt: _dropAmt
+        });
         s_dropInfoArrs.push(di);
         aie.alreadyDropAmts += _dropAmt;
         aie.alreadyDropNumber++;

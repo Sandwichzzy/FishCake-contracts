@@ -80,7 +80,7 @@ contract StakingManage is IStakingManager, Initializable, OwnableUpgradeable, Re
         require(
             amount > MIN_STAKE_AMT, "StakingManager DepositIntoStaking: staking amount must be more than minStakeAmount"
         );
-        IERC20(s_fccAddress).safeTransfer(address(this), amount);
+        IERC20(s_fccAddress).safeTransferFrom(msg.sender, address(this), amount);
         bytes32 txMessageHash = keccak256(abi.encode(msg.sender, s_fccAddress, amount, s_messageNonce));
         uint256 stakingTimestamp = 0;
         uint256 apr = 0;
@@ -114,6 +114,7 @@ contract StakingManage is IStakingManager, Initializable, OwnableUpgradeable, Re
         if (block.timestamp < txLockEndTime) {
             revert FundingUnderStaking(amount, txLockEndTime);
         }
+        require(s_stakingQueued[msg.sender][txMessageHash].stakingStatus == 0, "already withdrawn");
         uint256 amountOut = s_stakingQueued[msg.sender][txMessageHash].amount;
         if (amountOut < MIN_STAKE_AMT) {
             revert NoFundingForStaking();
@@ -166,7 +167,10 @@ contract StakingManage is IStakingManager, Initializable, OwnableUpgradeable, Re
     }
 
     function getNftApr(uint256 tokenId) internal view returns (uint256) {
-        require(tokenId != 0, "StakingManager getNftApr: tokenId can't be zero");
+        // 如果没有绑定 Booster NFT，返回 0% APR 加成
+        if (tokenId == 0) {
+            return 0;
+        }
         uint8 nftType = s_nftManagerAddress.getMinerBoosterNftType(tokenId);
         if (nftType == 6) {
             return 20;
