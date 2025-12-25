@@ -1,11 +1,11 @@
-# FishCake Contracts
+# EventFi Contracts
 
-FishCake 是一个创新的 Web3 项目,通过 NFT、质押和活动空投机制,将线下商家活动与区块链经济相结合,平台消除了中间商。
+EventFi 是一个创新的 Web3 项目,通过 NFT、质押和活动空投机制,将线下商家活动与区块链经济相结合,平台消除了中间商。
 例如一个社区来帮助项目方做活动，项目方需要把资金打给社区，社区再通过黑客松活动奖励，或者其他活动方式将分给用户，在这个例子里面，社区就是中间商，我们需要消除中间商，项目可以直接将要做活动代币打入合约，代币不再经过社区团队手。
 
 ## 项目概述
 
-FishCake 生态系统包含以下核心功能:
+EventFi 生态系统包含以下核心功能:
 
 - **代币销售**: 用户可通过 USDT 购买 FCC 代币
 - **NFT 系统**: 支持 Basic NFT (8 USDT) 和 Pro NFT (80 USDT),用于获得挖矿和活动收益
@@ -91,7 +91,7 @@ FishCake 生态系统包含以下核心功能:
 - **Legendary Tuna**: >= 1600 FCC,20% APR 加成
 - **Epic Salmon**: >= 1000 FCC,15% APR 加成
 - **Rare Shrimp**: >= 160 FCC,10% APR 加成
-- **Uncommon Fishcake**: >= 100 FCC,5% APR 加成
+- **Uncommon EventFi**: >= 100 FCC,5% APR 加成
 
 ### 4. EventManager (活动管理器)
 
@@ -177,18 +177,18 @@ forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --private-key <
 ## 项目结构
 
 ```
-FishCake-contracts/
+EventFi-contracts/
 ├── src/
 │   └── contracts/
 │       ├── core/
-│       │   ├── FishCakeEventManager.sol    # 活动管理
+│       │   ├── EventFiEventManager.sol    # 活动管理
 │       │   ├── StakingManager.sol          # 质押管理
 │       │   ├── RedemptionPool.sol          # 赎回池
 │       │   ├── sale/
 │       │   │   ├── DirectSalePool.sol      # 直接销售
 │       │   │   └── InvestorSalePool.sol    # 投资者销售
 │       │   └── token/
-│       │       ├── FishCakeCoin.sol        # FCC 代币
+│       │       ├── EventFiCoin.sol        # FCC 代币
 │       │       └── NftManagerV5.sol        # NFT 管理
 │       └── interfaces/                     # 合约接口
 ├── test/                                   # 测试文件
